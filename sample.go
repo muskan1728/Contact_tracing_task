@@ -6,7 +6,7 @@ import (
    "net/http"
    "time"
    "encoding/json"
-//    "go.mongodb.org/mongo-driver/bson"
+   // "go.mongodb.org/mongo-driver/bson"
    "go.mongodb.org/mongo-driver/mongo"
    "go.mongodb.org/mongo-driver/mongo/options"
    "go.mongodb.org/mongo-driver/bson/primitive"
@@ -78,9 +78,23 @@ func hello(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Sorry, only GET and POST methods are supported.")
 	}
 }
+func search(w http.ResponseWriter, r *http.Request){
+   fmt.Printf("%s",r.URL.Path[2:])
+   // filter := bson.D{
+   //    primitive.E{
+   //       ID : 
+   //    }
+   // }
+   // ctx,user :=ini()
+   // var a User
+   // a= new User("ID","_id")
+   // // err := user.Find(nil).Select(bson.M{"_id": 0}).All(&a)
+   // user.Find(nil).Select(bson.M{"_id": 0}).All(&a)
 
+}
 func main() {
 	http.HandleFunc("/users", hello)
+	http.HandleFunc("/users/:_id", search)
    ini() 
 	fmt.Printf("Starting server for testing HTTP POST...\n")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
