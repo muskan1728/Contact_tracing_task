@@ -5,6 +5,7 @@ import (
    "log"
    "net/http"
    "time"
+   "os"
    "encoding/json"
    "go.mongodb.org/mongo-driver/bson"
    "go.mongodb.org/mongo-driver/mongo"
@@ -83,18 +84,23 @@ func search(w http.ResponseWriter, r *http.Request){
    fmt.Fprintf(w,"%s",r.URL.Path[7:])
    // c.FindId(bson.M{"_id": bson.ObjectIdHex(r.URL.Path[7:])})
    ctx,user :=ini()
-   var u User
+   // err = client.Connect(ctx)
+   u := User{}
    docID ,err:= primitive.ObjectIDFromHex(r.URL.Path[7:])
-   fmt.Println(`bson.M{"_id": docID}:`, bson.M{"_id": docID})
+   // fmt.Println(`bson.M{"_id": docID}:`, bson.M{"_id": docID})
    err = user.FindOne(ctx, bson.M{"_id": docID}).Decode(&u)
    if err != nil {
-      // log.Fatal(err)
-      err = user.FindOne(ctx, bson.M{"_id": docID}).Decode(&u)
+      fmt.Println("FindOne() ObjectIDFromHex ERROR:", err)
+      os.Exit(1)
+   } else{
+   prettyJSON, err := json.MarshalIndent(u, "", "    ")
+   fmt.Fprintf(w,"%s\n", string(prettyJSON))
+   if err != nil {
+      log.Fatal("Failed to generate json", err)
   }
-   
-   // fmt.Println(`bson.M{"_id": docID}:`, bson.M{"_id": docID})
+   }
 
-   
+   // fmt.Println(`bson.M{"_id": docID}:`, bson.M{"_id": docID})   
 }
 func main() {
    http.HandleFunc("/users/",search)
