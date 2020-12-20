@@ -6,19 +6,12 @@ import (
    "net/http"
    "time"
    "encoding/json"
-   // "go.mongodb.org/mongo-driver/bson"
+   "go.mongodb.org/mongo-driver/bson"
    "go.mongodb.org/mongo-driver/mongo"
    "go.mongodb.org/mongo-driver/mongo/options"
    "go.mongodb.org/mongo-driver/bson/primitive"
    // "go.mongodb.org/mongo-driver/mongo/readpref"
 )
-type User struct{
-   ID primitive.ObjectID
-   time time.Time
-   Name string
-   number string
-   Email string
-}
 func ini() (context.Context,*mongo.Collection) {
    client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
    if err != nil {
@@ -34,6 +27,13 @@ func ini() (context.Context,*mongo.Collection) {
   user :=trace.Collection("Users")
   return ctx,user
 }
+type User struct{
+   ID primitive.ObjectID
+   time time.Time
+   Name string
+   number string
+   Email string
+}
 func createUser(user1 *User)  {
    ctx,user :=ini()
    _,err:= user.InsertOne(ctx, user1)
@@ -45,9 +45,10 @@ func createUser(user1 *User)  {
   }
 }
 func hello(w http.ResponseWriter, r *http.Request) {
+
 	if r.URL.Path != "/users" {
-		http.Error(w, "404 not found.", http.StatusNotFound)
-		return
+		
+      fmt.Fprintf(w,"cytc")
 	}
 	switch r.Method {
    case "GET":		
@@ -79,22 +80,25 @@ func hello(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func search(w http.ResponseWriter, r *http.Request){
-   fmt.Printf("%s",r.URL.Path[2:])
-   // filter := bson.D{
-   //    primitive.E{
-   //       ID : 
-   //    }
-   // }
-   // ctx,user :=ini()
-   // var a User
-   // a= new User("ID","_id")
-   // // err := user.Find(nil).Select(bson.M{"_id": 0}).All(&a)
-   // user.Find(nil).Select(bson.M{"_id": 0}).All(&a)
+   fmt.Fprintf(w,"%s",r.URL.Path[7:])
+   // c.FindId(bson.M{"_id": bson.ObjectIdHex(r.URL.Path[7:])})
+   ctx,user :=ini()
+   var u User
+   docID ,err:= primitive.ObjectIDFromHex(r.URL.Path[7:])
+   fmt.Println(`bson.M{"_id": docID}:`, bson.M{"_id": docID})
+   err = user.FindOne(ctx, bson.M{"_id": docID}).Decode(&u)
+   if err != nil {
+      // log.Fatal(err)
+      err = user.FindOne(ctx, bson.M{"_id": docID}).Decode(&u)
+  }
+   
+   // fmt.Println(`bson.M{"_id": docID}:`, bson.M{"_id": docID})
 
+   
 }
 func main() {
+   http.HandleFunc("/users/",search)
 	http.HandleFunc("/users", hello)
-	http.HandleFunc("/users/:_id", search)
    ini() 
 	fmt.Printf("Starting server for testing HTTP POST...\n")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
